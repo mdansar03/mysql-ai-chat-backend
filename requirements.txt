@@ -26,6 +26,8 @@ urllib3==2.0.4
 # Utility Libraries
 python-dateutil==2.8.2
 pytz==2023.3
+pyreadline3==3.4.1
+
 
 # Optional: Development and Debugging (uncomment if needed)
 # pytest==7.4.0
