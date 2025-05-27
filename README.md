@@ -1,242 +1,157 @@
-# MySQL AI Assistant
+# MySQL AI Assistant - React Frontend
 
-An intelligent MySQL database assistant that helps you query and analyze your data using natural language. Now available with both Flask (original) and React (modern) frontends!
-
-## 🚀 New React Frontend Available!
-
-We've successfully migrated the HTML interface to a modern React + Vite application. Choose your preferred frontend:
-
-### React Frontend (Recommended)
-- **Location**: `frontend/` directory
-- **Technology**: React 18 + Vite
-- **Features**: Modern UI, better performance, component-based architecture
-- **URL**: http://localhost:5173
-
-### Flask Frontend (Original)
-- **Location**: `templates/` directory  
-- **Technology**: Flask templates with vanilla JavaScript
-- **Features**: Server-side rendering, traditional web app
-- **URL**: http://localhost:5000
+This is the React frontend for the MySQL AI Assistant, built with Vite for fast development and optimized builds.
 
 ## Features
 
-- **Natural Language Queries**: Ask questions about your database in plain English
-- **Smart SQL Generation**: AI-powered SQL query generation and optimization
-- **Data Visualization**: Intelligent formatting and grouping of query results
-- **Export Capabilities**: Export results to CSV and JSON formats
-- **Performance Optimization**: Configurable AI model settings for speed vs accuracy
-- **Database Schema Analysis**: Automatic table discovery and relationship mapping
-- **Real-time Chat Interface**: Interactive conversation with your database
-- **Connection Management**: Secure database connection handling
+- **Modern React UI**: Built with React 18 and Vite for optimal performance
+- **Database Connection Management**: Connect to MySQL databases with a user-friendly interface
+- **Interactive Chat Interface**: Natural language queries with AI-powered responses
+- **Data Visualization**: Smart formatting and grouping of query results
+- **Export Functionality**: Export query results to CSV and JSON formats
+- **Performance Settings**: Configure AI model settings for optimal performance
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
+- **Real-time Status Updates**: Live connection and query status indicators
 
-## Quick Start
+## Prerequisites
 
-### Option 1: React Frontend (Recommended)
-
-1. **Start the Flask Backend**:
-```bash
-python app.py
-```
-
-2. **Start the React Frontend**:
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-3. **Access the Application**:
-   - React UI: http://localhost:5173
-   - Backend API: http://localhost:5000
-
-### Option 2: Flask Frontend (Original)
-
-1. **Start the Flask Application**:
-```bash
-python app.py
-```
-
-2. **Access the Application**:
-   - Web Interface: http://localhost:5000
+- Node.js 16+ and npm
+- MySQL AI Assistant backend running on port 5000
 
 ## Installation
 
-### Prerequisites
-- Python 3.8+
-- Node.js 16+ (for React frontend)
-- MySQL Server
-- OpenAI API key
-
-### Backend Setup
-
-1. **Clone the repository**:
-```bash
-git clone <repository-url>
-cd mysql-chatbot
-```
-
-2. **Create virtual environment**:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-3. **Install dependencies**:
-```bash
-pip install -r requirements.txt
-```
-
-4. **Set up environment variables**:
-```bash
-# Create .env file
-OPENAI_API_KEY=your_openai_api_key_here
-```
-
-### Frontend Setup (React)
-
-1. **Navigate to frontend directory**:
-```bash
-cd frontend
-```
-
-2. **Install dependencies**:
+1. Install dependencies:
 ```bash
 npm install
 ```
 
-3. **Start development server**:
+2. Start the development server:
 ```bash
 npm run dev
 ```
+
+The frontend will be available at `http://localhost:5173` and will automatically proxy API calls to the Flask backend at `http://localhost:5000`.
 
 ## Project Structure
 
 ```
-mysql-chatbot/
-├── frontend/                 # React frontend (NEW)
-│   ├── src/
-│   │   ├── components/      # React components
-│   │   ├── App.jsx         # Main app component
-│   │   └── index.css       # Global styles
-│   ├── package.json
-│   └── vite.config.js
-├── templates/               # Flask templates (Original)
-│   ├── index.html          # Main interface
-│   └── flowchart.html      # Database visualization
-├── src/                    # Backend modules
-│   ├── services/           # Business logic
-│   ├── contexts/           # Context managers
-│   └── components/         # Utility components
-├── app.py                  # Flask application
-├── requirements.txt        # Python dependencies
-└── README.md              # This file
+src/
+├── components/
+│   ├── Sidebar.jsx          # Database connection and settings
+│   ├── ChatArea.jsx         # Main chat interface
+│   ├── Message.jsx          # Individual message display
+│   ├── MessageInput.jsx     # User input component
+│   ├── DataResults.jsx      # Query results display
+│   └── SQLQuery.jsx         # SQL query display with copy
+├── App.jsx                  # Main application component
+├── main.jsx                 # Application entry point
+├── index.css                # Global styles
+└── App.css                  # Component-specific styles
 ```
 
-## API Endpoints
+## Key Components
 
-The Flask backend provides these REST API endpoints:
+### Sidebar
+- Database connection form
+- Table selection interface
+- Performance settings configuration
+- Connection status display
 
-- `POST /connect` - Connect to MySQL database
-- `POST /disconnect` - Disconnect from database
-- `GET /get_tables` - Retrieve database tables
-- `POST /chat` - Send natural language queries
+### ChatArea
+- Message history display
+- Loading indicators
+- Export functionality
+- Auto-scrolling
+
+### Message
+- Formatted message display
+- AI response formatting (markdown-like)
+- SQL query integration
+- Data results integration
+
+### DataResults
+- Smart field grouping
+- Formatted data display
+- Export buttons (CSV/JSON)
+- Pagination for large datasets
+
+## API Integration
+
+The frontend communicates with the Flask backend through these endpoints:
+
+- `POST /api/connect` - Database connection
+- `POST /api/disconnect` - Database disconnection  
+- `GET /api/connection_status` - Check connection status
+- `GET /api/get_tables` - Fetch database tables
+- `POST /api/process_table` - Process and analyze table schema
+- `POST /api/query` - Send natural language queries
 - `GET /api/performance_config` - Get performance settings
-- `POST /api/performance_config` - Update performance settings
+- `POST /api/performance_config` - Save performance settings
 
-## Configuration
+## Key Features
 
-### Performance Settings
-- **Use Faster Model**: Trade accuracy for speed
-- **Reduce AI Context**: Limit context for faster responses
-- **Enable Vector Search**: Use semantic search for better results
-- **Enable Performance Analysis**: Get query performance insights
+### Complete Flow Implementation
+- **Database Connection**: Connect with host, port, username, password, database
+- **Table Processing**: Select and process tables for AI analysis (required before querying)
+- **Natural Language Queries**: Ask questions about your data in plain English
+- **AI-Powered Responses**: Get intelligent summaries and insights
+- **SQL Query Display**: See the generated SQL with copy functionality
+- **Data Export**: Export results to CSV and JSON formats
+- **Performance Monitoring**: View execution times and optimization suggestions
 
-### Database Connection
-- **Host**: MySQL server hostname
-- **Port**: MySQL server port (default: 3306)
-- **Username**: Database username
-- **Password**: Database password
-- **Database**: Target database name
+### Workflow
+1. **Connect** to your MySQL database using the sidebar form
+2. **Load Tables** to see available tables in your database
+3. **Process Table** by entering a table name and clicking "Process Table"
+4. **Query** your data using natural language in the chat interface
+5. **Export** results and view performance information
 
-## Migration Notes
+## Styling
 
-### HTML to React Migration Completed ✅
+The application uses CSS custom properties (variables) for consistent theming:
 
-The original HTML interface has been successfully migrated to React with the following improvements:
-
-#### ✨ New Features
-- **Component-based architecture** for better maintainability
-- **Modern React hooks** for state management
-- **Vite build system** for fast development and optimized builds
-- **Improved error handling** and user feedback
-- **Better responsive design** for mobile devices
-- **Enhanced accessibility** features
-
-#### 🔄 Preserved Features
-- **All original functionality** maintained
-- **Same API integration** with Flask backend
-- **Identical styling** and user experience
-- **Export capabilities** (CSV/JSON)
-- **Performance settings** configuration
-- **Database connection management**
-
-#### 🚀 Technical Improvements
-- **Faster load times** with Vite
-- **Better development experience** with hot reload
-- **Modular code structure** for easier maintenance
-- **Modern JavaScript** with ES6+ features
-- **Optimized bundle size** for production
+- Modern color palette with primary, secondary, and semantic colors
+- Responsive design with mobile-first approach
+- Smooth animations and transitions
+- FontAwesome icons for UI elements
 
 ## Development
 
-### React Frontend Development
+### Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
+
+### Code Style
+
+- ESLint configuration for React best practices
+- Functional components with hooks
+- Consistent naming conventions
+- Modular component architecture
+
+## Production Build
+
+To build for production:
+
 ```bash
-cd frontend
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run preview      # Preview production build
-npm run lint         # Run ESLint
+npm run build
 ```
 
-### Flask Backend Development
-```bash
-python app.py        # Start Flask development server
-```
+The built files will be in the `dist/` directory and can be served by any static file server.
 
-## Production Deployment
+## Browser Support
 
-### React Frontend
-```bash
-cd frontend
-npm run build        # Creates dist/ directory
-# Serve dist/ directory with any static file server
-```
-
-### Flask Backend
-```bash
-# Use production WSGI server like Gunicorn
-gunicorn -w 4 -b 0.0.0.0:5000 app:app
-```
+- Chrome 88+
+- Firefox 85+
+- Safari 14+
+- Edge 88+
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test both frontends
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Support
-
-For issues and questions:
-1. Check the documentation in each frontend's README
-2. Review the API endpoints documentation
-3. Create an issue on GitHub
-
----
-
-**Choose Your Frontend**: Both interfaces provide the same powerful features - pick the one that fits your development preferences!
+1. Follow the existing code style
+2. Add proper error handling
+3. Include responsive design considerations
+4. Test on multiple browsers
+5. Update documentation as needed
