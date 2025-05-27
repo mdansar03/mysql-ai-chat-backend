@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 import json
 import hashlib
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, request, jsonify, session
 from flask_cors import CORS
 import mysql.connector
 from mysql.connector import Error
@@ -949,13 +949,101 @@ Provide a brief, clear summary in 2-3 sentences. Format as clean HTML paragraphs
 # Initialize processor
 processor = MySQLSchemaProcessor()
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+# Remove the template routes that cause errors
+# @app.route('/')
+# def index():
+#     return render_template('index.html')
 
-@app.route('/flowchart')
-def flowchart():
-    return render_template('flowchart.html')
+# @app.route('/flowchart')
+# def flowchart():
+#     return render_template('flowchart.html')
+
+# Add a simple API info route instead
+@app.route('/')
+def api_info():
+    return jsonify({
+        'name': 'MySQL Backend API',
+        'version': '1.0.0',
+        'description': 'AI-powered MySQL query interface with natural language processing',
+        'endpoints': {
+            'connect': 'POST /api/connect - Connect to MySQL database',
+            'disconnect': 'POST /api/disconnect - Disconnect from database',
+            'status': 'GET /api/connection_status - Check connection status',
+            'tables': 'GET /api/get_tables - Get available tables',
+            'process': 'POST /api/process_table - Process table schema',
+            'query': 'POST /api/query - Execute natural language query',
+            'config': 'GET/POST /api/performance_config - Performance settings',
+            'health': 'GET /health - Health check endpoint'
+        },
+        'status': 'running'
+    })
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint for monitoring and load balancers"""
+    try:
+        # Check basic application health
+        health_status = {
+            'status': 'healthy',
+            'timestamp': datetime.now().isoformat(),
+            'version': '1.0.0',
+            'service': 'MySQL Backend API'
+        }
+        
+        # Check OpenAI client status
+        if client:
+            health_status['openai_client'] = 'connected'
+        else:
+            health_status['openai_client'] = 'not_configured'
+            health_status['status'] = 'degraded'
+        
+        # Check Pinecone status
+        try:
+            if processor.index:
+                # Try a simple operation to verify Pinecone connectivity
+                processor.index.describe_index_stats()
+                health_status['pinecone'] = 'connected'
+            else:
+                health_status['pinecone'] = 'not_configured'
+                health_status['status'] = 'degraded'
+        except Exception as e:
+            health_status['pinecone'] = f'error: {str(e)}'
+            health_status['status'] = 'degraded'
+        
+        # Check database connection if available
+        connection_id = session.get('connection_id')
+        if connection_id:
+            connection = connection_manager.get_connection(connection_id)
+            if connection and connection.is_connected():
+                health_status['database'] = 'connected'
+                health_status['database_name'] = session.get('database_name')
+            else:
+                health_status['database'] = 'disconnected'
+        else:
+            health_status['database'] = 'no_active_connection'
+        
+        # Performance configuration status
+        health_status['performance_config'] = {
+            'vector_search_enabled': PerformanceConfig.ENABLE_VECTOR_SEARCH,
+            'performance_analysis_enabled': PerformanceConfig.ENABLE_PERFORMANCE_ANALYSIS,
+            'query_validation_enabled': PerformanceConfig.ENABLE_QUERY_VALIDATION,
+            'using_faster_model': PerformanceConfig.USE_FASTER_MODEL
+        }
+        
+        # Return appropriate HTTP status code
+        if health_status['status'] == 'healthy':
+            return jsonify(health_status), 200
+        else:
+            return jsonify(health_status), 200  # Still return 200 for degraded but functional
+            
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}")
+        return jsonify({
+            'status': 'unhealthy',
+            'timestamp': datetime.now().isoformat(),
+            'error': str(e),
+            'service': 'MySQL Backend API'
+        }), 503
 
 @app.route('/api/connect', methods=['POST'])
 def connect_database():
