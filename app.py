@@ -32,10 +32,31 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app)
+
+# Configure CORS to support credentials (sessions/cookies) including the Vercel frontend
+CORS(app, 
+     supports_credentials=True, 
+     origins=[
+         'http://localhost:3000', 
+         'http://127.0.0.1:3000', 
+         'http://localhost:5173', 
+         'http://127.0.0.1:5173',
+         'https://mysql-ai-chat-frontend.vercel.app'
+     ],
+     allow_headers=['Content-Type', 'Authorization'],
+     methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+)
 
 # Generate a secure secret key for sessions
 app.secret_key = os.getenv('FLASK_SECRET_KEY', secrets.token_hex(32))
+
+# Configure session settings for better reliability
+app.config.update(
+    SESSION_COOKIE_SECURE=True,  # Set to True for HTTPS (production)
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='None',  # Required for cross-site requests with HTTPS
+    PERMANENT_SESSION_LIFETIME=3600  # 1 hour session lifetime
+)
 
 # Configuration
 class Config:
@@ -1291,25 +1312,93 @@ def handle_query():
 def get_tables():
     """Get list of available tables"""
     try:
+        # Debug session information
+        connection_id = session.get('connection_id')
+        database_name = session.get('database_name')
+        
+        logger.info(f"get_tables called - connection_id: {connection_id}, database_name: {database_name}")
+        logger.info(f"Session keys: {list(session.keys())}")
+        
         # Check if connected
-        if not session.get('connection_id'):
-            return jsonify({'error': 'No active database connection. Please connect to a database first.'}), 401
+        if not connection_id:
+            logger.warning("No connection_id found in session")
+            return jsonify({
+                'error': 'No active database connection. Please connect to a database first.',
+                'debug_info': {
+                    'session_keys': list(session.keys()),
+                    'connection_id': connection_id,
+                    'database_name': database_name,
+                    'suggestion': 'Make sure to call /api/connect first and that your frontend is sending cookies'
+                }
+            }), 401
             
         connection = processor.get_connection_from_session()
         if not connection:
-            return jsonify({'error': 'Database connection lost'}), 500
+            logger.error("Database connection lost or invalid")
+            # Clean up session
+            session.pop('connection_id', None)
+            session.pop('database_name', None)
+            return jsonify({
+                'error': 'Database connection lost. Please reconnect.',
+                'debug_info': {
+                    'connection_id': connection_id,
+                    'database_name': database_name
+                }
+            }), 500
         
         cursor = connection.cursor()
-        database_name = session.get('database_name', 'database')
         cursor.execute(f"SHOW TABLES FROM `{database_name}`")
         tables = [table[0] for table in cursor.fetchall()]
         cursor.close()
         
-        return jsonify({'tables': tables})
+        logger.info(f"Successfully retrieved {len(tables)} tables")
+        return jsonify({
+            'tables': tables,
+            'database': database_name,
+            'connection_id': connection_id[:8] + '...'  # Show partial ID for debugging
+        })
         
     except Exception as e:
         logger.error(f"Error getting tables: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({
+            'error': str(e),
+            'debug_info': {
+                'session_keys': list(session.keys()),
+                'connection_id': session.get('connection_id'),
+                'database_name': session.get('database_name')
+            }
+        }), 500
+
+@app.route('/api/debug/session', methods=['GET'])
+def debug_session():
+    """Debug endpoint to check session information"""
+    try:
+        connection_id = session.get('connection_id')
+        database_name = session.get('database_name')
+        
+        debug_info = {
+            'session_keys': list(session.keys()),
+            'connection_id': connection_id,
+            'database_name': database_name,
+            'session_id': session.get('_id', 'No session ID'),
+            'has_connection': connection_id is not None,
+            'connection_manager_has_connection': connection_id in connection_manager.connections if connection_id else False,
+            'user_agent': request.headers.get('User-Agent', 'Unknown'),
+            'origin': request.headers.get('Origin', 'Unknown'),
+            'cookies_received': list(request.cookies.keys())
+        }
+        
+        if connection_id:
+            connection = connection_manager.get_connection(connection_id)
+            debug_info['connection_alive'] = connection is not None and connection.is_connected() if connection else False
+        
+        return jsonify(debug_info)
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'session_keys': list(session.keys()) if 'session' in globals() else 'No session'
+        }), 500
 
 @app.route('/api/performance_config', methods=['GET', 'POST'])
 def performance_config():
